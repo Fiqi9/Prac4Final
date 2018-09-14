@@ -37,6 +37,10 @@ f = 0.5
 Bool = True
 
 def one(channel):
+    timer = str(0)+":"+str(0)+":"+str(0)
+    os.system('printf "\033c"')
+
+def two(channel):
     global frequency
     global f
     if (frequency == 0.5):
@@ -46,19 +50,22 @@ def one(channel):
     elif (frequency == 2):
         frequency = 0.5
     
-def two(channel):
+def three(channel):
     global Bool
     if Bool == True:
         Bool = False
     else:
         Bool = True
 
-##def three(channel):
+##def four(channel):
+GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
+GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
+GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
+   # GPIO.add_event_detect(switch4, GPIO.FALLING, callback=four, bouncetime=300)
 
-GPIO.add_event_detect(switch2, GPIO.FALLING, callback=one, bouncetime=300)
-GPIO.add_event_detect(switch3, GPIO.FALLING, callback=two, bouncetime=300)
-   # GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
-
+h = 0
+m = 0
+s = 0
 
 try:
 ##        GPIO.wait_for_edge(switch1, GPIO.RISING)
@@ -74,34 +81,44 @@ try:
     print('-' * 24)
     # Main program loop.
     while True:
-        
-        if Bool == True:
 
-            values = [0]*5
-            #for i in range(8):
-                # The read_adc function will get the value of the specified channel (0-7).
-            pot_data = mcp.read_adc(0)
-            values[2] = ConvertVolts(pot_data,2)
-         
-            temperature_data = mcp.read_adc(1) #Temperature
-            values[3] = int(0.3921*temperature_data - 60.891)  #Excel linear approximation
+        values = [0]*5
+        #for i in range(8):
+            # The read_adc function will get the value of the specified channel (0-7).
+        pot_data = mcp.read_adc(0)
+        values[2] = ConvertVolts(pot_data,2)
+     
+        temperature_data = mcp.read_adc(1) #Temperature
+        values[3] = int(0.3921*temperature_data - 60.891)  #Excel linear approximation
+    
+        ldr_data = mcp.read_adc(2)
+        values[4] = int(0.11*ldr_data - 2.3102)
+    
+    
+        hour = time.strftime("%H")
+        min = time.strftime("%M")
+        sec = time.strftime("%S")
+    
+        values[0] = hour+":"+min+":"+sec
         
-            ldr_data = mcp.read_adc(2)
-            values[4] = int(0.11*ldr_data - 2.3102)
-        
-        
-            hour = time.strftime("%H")
-            min = time.strftime("%M")
-            sec = time.strftime("%S")
-        
-            values[0] = hour+":"+min+":"+sec
-        
-             #values[i] = mcp.read_adc(i)
-            # Print the ADC values.
+        if s > 59:
+            s = 0
+            m+=1
+        elif m > 59:
+            h+=1
+            m = 0
+        else:
+            s+=frequency
+    
+        timer = str('%02d'%h)+":"+str('%02d'%m)+":"+str('%02d'%int(s))
+        values[1] = timer
+         #values[i] = mcp.read_adc(i)
+        # Print the ADC values.
+        if Bool == True:
             print('| {0:>4} | {1:>4} | {2:>4} C | {3:>4}% | {4:>4} |'.format(*values))
             print(frequency)
-            # Pause for half a second.
-            time.sleep(frequency)
+        # Pause for half a second.
+        time.sleep(frequency)
 
 except KeyboardInterrupt:
     GPIO.cleanup() # clean up GPIO on CTRL+C exit
