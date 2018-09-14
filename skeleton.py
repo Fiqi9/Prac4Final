@@ -47,18 +47,27 @@ def ConvertVolts(data,places):
 
 print('Reading MCP3008 values, press Ctrl-C to quit...')
 # Print nice channel column headers.
-print('| {0:>4} | {1:>4} | {2:>4} | {3:>4} | {4:>4} | {5:>4} | {6:>4} | {7:>4} |'.format(*range(8)))
+print('| {0:>4} | {1:>4} | {2:>4} |'.format(*range(8)))
 print('-' * 57)
 # Main program loop.
 while True:
-    values = [0]*8
+    values = [0]*3
     #for i in range(8):
         # The read_adc function will get the value of the specified channel (0-7).
-    data = mcp.read_adc(1)
-    voltage = ConvertVolts(data,2)
-        #values[i] = mcp.read_adc(i)
+    pot_data = mcp.read_adc(0)
+    values[0] = ConvertVolts(pot_data,2)
+     
+    temperature_data = mcp.read_adc(1) #Temperature
+    values[1] = int(0.3921*temperature_data - 60.891)  #Excel linear approximation
+    
+    ldr_data = mcp.read_adc(2)
+    values[2] = int(0.11*ldr_data - 2.3102)
+    
+    
+    
+     #values[i] = mcp.read_adc(i)
     # Print the ADC values.
-    print('| {0:>4} |', voltage,' | {2:>4} | {3:>4} | {4:>4} | {5:>4} | {6:>4} | {7:>4} |'.format(*values))
+    print('| {0:>4} | {1:>4} C | {2:>4}% |'.format(*values))
     # Pause for half a second.
     time.sleep(0.5)
 
