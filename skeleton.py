@@ -3,8 +3,9 @@ import time
 import Adafruit_MCP3008
 import os
 import Adafruit_GPIO.SPI as SPI
-#GPIO.setwarnings(False)
 
+#GPIO setup
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
 switch1 = 21
@@ -31,60 +32,75 @@ GPIO.setup(SPICS, GPIO.OUT)
 
 mcp = Adafruit_MCP3008.MCP3008(clk=SPICLK, cs=SPICS, miso=SPIMISO, mosi=SPIMOSI)
 
+#Variables
 frequency = 0.5
-f = 0.5
-
-Bool = True
-
-def one(channel):
-    timer = str(0)+":"+str(0)+":"+str(0)
-    os.system('printf "\033c"')
-
-def two(channel):
-    global frequency
-    global f
-    if (frequency == 0.5):
-        frequency = 1
-    elif (frequency == 1):
-        frequency = 2
-    elif (frequency == 2):
-        frequency = 0.5
-    
-def three(channel):
-    global Bool
-    if Bool == True:
-        Bool = False
-    else:
-        Bool = True
-
-##def four(channel):
-GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
-GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
-GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
-   # GPIO.add_event_detect(switch4, GPIO.FALLING, callback=four, bouncetime=300)
 
 h = 0
 m = 0
 s = 0
 
+list = []
+
+Bool = True
+
+def one(channel):
+    timer = str(0)+":"+str(0)+":"+str(0)   #reset timer
+    os.system('printf "\033c"')   #clear
+
+def two(channel):     #Swicthes frequency
+    global frequency
+    if (frequency == 0.5):
+        frequency = 1
+    elif (frequency == 1):
+        frequency = 2
+    elif (frequency == 2):
+        frequency = 0.5    #resets to 0.5s frequency
+    
+def three(channel):  #Toggle stop and start
+    global Bool
+    if Bool == True:
+        Bool = False
+    else:
+        Bool = True
+        
+def four(channel):
+    print("")
+    print('-' * 47)
+    print('|   Time   |   Timer  |  Pot   | Temp  | Light|')
+    print('-' * 47)
+    print('| '+str(list[0][0])+' | '+str(list[0][1])+' |  '+str(list[0][2])+' C |   '+str(list[0][3])+'% |   '+str(list[0][4])+' |')
+    print('-' * 47)
+    print('| '+str(list[1][0])+' | '+str(list[1][1])+' |  '+str(list[1][2])+' C |   '+str(list[1][3])+'% |   '+str(list[1][4])+' |')
+    print('-' * 47)
+    print('| '+str(list[2][0])+' | '+str(list[2][1])+' |  '+str(list[2][2])+' C |   '+str(list[2][3])+'% |   '+str(list[2][4])+' |')
+    print('-' * 47)
+    print('| '+str(list[3][0])+' | '+str(list[3][1])+' |  '+str(list[3][2])+' C |   '+str(list[3][3])+'% |   '+str(list[3][4])+' |')
+    print('-' * 47)
+    print('| '+str(list[4][0])+' | '+str(list[4][1])+' |  '+str(list[4][2])+' C |   '+str(list[4][3])+'% |   '+str(list[4][4])+' |')
+    print('-' * 47)
+    print('')
+
+GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
+GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
+GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
+GPIO.add_event_detect(switch4, GPIO.FALLING, callback=four, bouncetime=300)
+
 try:
-##        GPIO.wait_for_edge(switch1, GPIO.RISING)
 
     def ConvertVolts(data,places):
         volts = (data * 3.3) / float(1023)
         volts = round(volts,places)
         return volts
 
-    print('Reading MCP3008 values, press Ctrl-C to quit...')
     # Print nice channel column headers.
-    print('| Time | Timer | Pot  | Temp   | Light |')
-    print('-' * 24)
+    print('|   Time   |   Timer  |  Pot   | Temp  | Light|')
+    print('-' * 47)
     # Main program loop.
     while True:
 
         values = [0]*5
         #for i in range(8):
-            # The read_adc function will get the value of the specified channel (0-7).
+        # The read_adc function will get the value of the specified channel (0-2).
         pot_data = mcp.read_adc(0)
         values[2] = ConvertVolts(pot_data,2)
      
@@ -93,7 +109,6 @@ try:
     
         ldr_data = mcp.read_adc(2)
         values[4] = int(0.11*ldr_data - 2.3102)
-    
     
         hour = time.strftime("%H")
         min = time.strftime("%M")
@@ -112,18 +127,19 @@ try:
     
         timer = str('%02d'%h)+":"+str('%02d'%m)+":"+str('%02d'%int(s))
         values[1] = timer
-         #values[i] = mcp.read_adc(i)
-        # Print the ADC values.
+        
+        if Bool == False:
+            list.append([values[0], values[1], values[2], values[3], values[4]])
+        
         if Bool == True:
             print('| {0:>4} | {1:>4} | {2:>4} C | {3:>4}% | {4:>4} |'.format(*values))
-            print(frequency)
-        # Pause for half a second.
+            print('-' * 47)
+        # Pause for frequency seconds.
         time.sleep(frequency)
 
 except KeyboardInterrupt:
     GPIO.cleanup() # clean up GPIO on CTRL+C exit
         
-
 
 
 
