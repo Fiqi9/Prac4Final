@@ -78,7 +78,7 @@ def four(channel):
     print('-' * 47)
     print('| '+str(list[4][0])+' | '+str(list[4][1])+' |  '+str(list[4][2])+' C |   '+str(list[4][3])+'% |   '+str(list[4][4])+' |')
     print('-' * 47)
-    print('')
+    print(' ')
 
 GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
 GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
