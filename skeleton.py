@@ -3,17 +3,19 @@ import time
 import Adafruit_MCP3008
 import os
 import Adafruit_GPIO.SPI as SPI
+#GPIO.setwarnings(False)
 
 GPIO.setmode(GPIO.BCM)
 
 switch1 = 21
 switch2 = 16
 switch3 = 12
+switch4 = 20
 
 GPIO.setup(switch1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(switch2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(switch3, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
+GPIO.setup(switch4, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 
 # Software SPI configuration:
@@ -29,54 +31,81 @@ GPIO.setup(SPICS, GPIO.OUT)
 
 mcp = Adafruit_MCP3008.MCP3008(clk=SPICLK, cs=SPICS, miso=SPIMISO, mosi=SPIMOSI)
 
-#def one(channel):
-#def two(channel):
-#def three(channel):
+frequency = 0.5
+f = 0.5
 
-#while(1):
- #   GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
-  #  GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
+Bool = True
+
+def one(channel):
+    global frequency
+    global f
+    if (frequency == 0.5):
+        frequency = 1
+    elif (frequency == 1):
+        frequency = 2
+    elif (frequency == 2):
+        frequency = 0.5
+    
+def two(channel):
+    global Bool
+    if Bool == True:
+        Bool = False
+    else:
+        Bool = True
+
+##def three(channel):
+
+GPIO.add_event_detect(switch2, GPIO.FALLING, callback=one, bouncetime=300)
+GPIO.add_event_detect(switch3, GPIO.FALLING, callback=two, bouncetime=300)
    # GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
 
-def ConvertVolts(data,places):
- volts = (data * 3.3) / float(1023)
- volts = round(volts,places)
- return volts
 
-print('Reading MCP3008 values, press Ctrl-C to quit...')
-# Print nice channel column headers.
-print('| Time | Timer | Pot  | Temp   | Light |')
-print('-' * 24)
-# Main program loop.
+try:
+##        GPIO.wait_for_edge(switch1, GPIO.RISING)
 
-while True:
+    def ConvertVolts(data,places):
+        volts = (data * 3.3) / float(1023)
+        volts = round(volts,places)
+        return volts
 
-    values = [0]*5
-    #for i in range(8):
-        # The read_adc function will get the value of the specified channel (0-7).
-    pot_data = mcp.read_adc(0)
-    values[2] = ConvertVolts(pot_data,2)
-     
-    temperature_data = mcp.read_adc(1) #Temperature
-    values[3] = int(0.3921*temperature_data - 60.891)  #Excel linear approximation
-    
-    ldr_data = mcp.read_adc(2)
-    values[4] = int(0.11*ldr_data - 2.3102)
-    
-    
-    hour = time.strftime("%H")
-    min = time.strftime("%M")
-    sec = time.strftime("%S")
-    
-    values[0] = hour+":"+min+":"+sec
-    
-     #values[i] = mcp.read_adc(i)
-    # Print the ADC values.
-    print('| {0:>4} | {1:>4} | {2:>4} C | {3:>4}% | {4:>4} |'.format(*values))
-    # Pause for half a second.
-    time.sleep(0.5)
+    print('Reading MCP3008 values, press Ctrl-C to quit...')
+    # Print nice channel column headers.
+    print('| Time | Timer | Pot  | Temp   | Light |')
+    print('-' * 24)
+    # Main program loop.
+    while True:
+        
+        if Bool == True:
 
+            values = [0]*5
+            #for i in range(8):
+                # The read_adc function will get the value of the specified channel (0-7).
+            pot_data = mcp.read_adc(0)
+            values[2] = ConvertVolts(pot_data,2)
+         
+            temperature_data = mcp.read_adc(1) #Temperature
+            values[3] = int(0.3921*temperature_data - 60.891)  #Excel linear approximation
+        
+            ldr_data = mcp.read_adc(2)
+            values[4] = int(0.11*ldr_data - 2.3102)
+        
+        
+            hour = time.strftime("%H")
+            min = time.strftime("%M")
+            sec = time.strftime("%S")
+        
+            values[0] = hour+":"+min+":"+sec
+        
+             #values[i] = mcp.read_adc(i)
+            # Print the ADC values.
+            print('| {0:>4} | {1:>4} | {2:>4} C | {3:>4}% | {4:>4} |'.format(*values))
+            print(frequency)
+            # Pause for half a second.
+            time.sleep(frequency)
 
+except KeyboardInterrupt:
+    GPIO.cleanup() # clean up GPIO on CTRL+C exit
+        
 
 
 
