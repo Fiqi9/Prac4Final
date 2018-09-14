@@ -29,16 +29,14 @@ GPIO.setup(SPICS, GPIO.OUT)
 
 mcp = Adafruit_MCP3008.MCP3008(clk=SPICLK, cs=SPICS, miso=SPIMISO, mosi=SPIMOSI)
 
-#def one(channel):
+def one(channel):
+def two(channel):
+def three(channel):
 
-#def two(channel):
-    
-#def three(channel):
-
-#while(1):
-#    GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
-#    GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
-#    GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
+while(1):
+    GPIO.add_event_detect(switch1, GPIO.FALLING, callback=one, bouncetime=300)
+    GPIO.add_event_detect(switch2, GPIO.FALLING, callback=two, bouncetime=300)
+    GPIO.add_event_detect(switch3, GPIO.FALLING, callback=three, bouncetime=300)
 
 def ConvertVolts(data,places):
  volts = (data * 3.3) / float(1023)
@@ -47,8 +45,8 @@ def ConvertVolts(data,places):
 
 print('Reading MCP3008 values, press Ctrl-C to quit...')
 # Print nice channel column headers.
-print('| {0:>4} | {1:>4} | {2:>4} |'.format(*range(8)))
-print('-' * 57)
+print('| Pot  | Temp   | Light |')
+print('-' * 24)
 # Main program loop.
 while True:
     values = [0]*3
